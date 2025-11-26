@@ -1,0 +1,9 @@
+image: gitpod/workspace-php:latest
+tasks:
+  - name: Butter Cake Recipe
+    init: composer install
+    command: |
+      cp -n .env.example .env
+      php artisan key:generate --force
+      php artisan recipe:butter-cake
+ports: []
