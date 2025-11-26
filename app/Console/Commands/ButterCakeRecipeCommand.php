@@ -72,7 +72,7 @@ class ButterCakeRecipeCommand extends Command
         $this->serve();
     }
 
-    public function prepare() {
+    public function prepare(): void {
 
         $ovens = array_keys($this->ovenSettings);
         $chosenOven = $this->choice('Which oven would you like to use?', $ovens);
@@ -110,7 +110,7 @@ class ButterCakeRecipeCommand extends Command
         sleep(1.5);
     }
 
-    public function makeBatter() {
+    public function makeBatter(): void {
         $this->info("\e[1mNext step...\e[0m");
         $this->info("Using a {$this->kitchenSupplies[1]}, soften the {$this->ingredients[2]} in a mixing bowl...");
         $softenedButter = strtolower($this->ask("\e[1mDone? (yes/no)\e[0m")) === 'yes' ? 'Yes' : 'No';
@@ -172,55 +172,101 @@ class ButterCakeRecipeCommand extends Command
         $this->info("-----------------------------------------------\n");
     }
 
-    public function bake() {
+    public function bake() : void {
         $this->info("\e[1mNext step...\e[0m");
         $this->info("Bake the cake in the oven for {$this->preperationTime['baking']}...");
         $baked = strtolower($this->ask("\e[1mStart timer? (yes/no)\e[0m")) === 'yes' ? 'Yes' : 'No';
-
+    
         if ($baked === 'No') {
             $this->warn("Don't forget to bake the cake in the oven for {$this->preperationTime['baking']} before proceeding!");
             return;
         }
-
+    
         $bar = $this->output->createProgressBar($this->preperationTime['bakingTime']);
         $bar->start();
-
-        for ($i = 0; $i < $this->preperationTime['bakingTime']; $i++) {
-            $bar->advance();
-            sleep(60);
+        $this->info(' Hit enter to stop the timer...');
+    
+        $timerStopped = false;
+        for ($i = 0; $i < $this->preperationTime['bakingTime'] && !$timerStopped; $i++) {
+            // Check for input every second instead of once per minute
+            for ($j = 0; $j < 60 && !$timerStopped; $j++) {
+                // Check for input in a non-blocking way
+                $read = [STDIN];
+                $write = null;
+                $except = null;
+                
+                // Check if there's input available (non-blocking)
+                if (stream_select($read, $write, $except, 0, 0) > 0) {
+                    $input = trim(fgets(STDIN));
+                    if ($input === '') {
+                        $timerStopped = true;
+                        $this->info("\n\e[33mTimer stopped by user.\e[0m\n");
+                        break;
+                    }
+                }
+                
+                sleep(1);
+            }
+            
+            if (!$timerStopped) {
+                $bar->advance();
+            }
         }
-
+    
         $bar->finish();
         $this->info("\n");
-
+    
         $this->info("Take the cake out of the oven...");
         $cakeTakenOut = strtolower($this->ask("\e[1mDone? (yes/no)\e[0m")) === 'yes' ? 'Yes' : 'No';
-
+    
         if ($cakeTakenOut === 'No') {
             $this->warn("Don't forget to take the cake out of the oven before proceeding!");
             return;
         }
-
+    
         $this->info("\e[32m✔ You're ready to cool!\e[0m\n");
         sleep(1.5);
     }
 
-    public function cool() {
+    public function cool() : void {
         $this->info("\e[1mNext step...\e[0m");
         $this->info("Let the cake cool for {$this->preperationTime['cooling']} before taking it out of the {$this->kitchenSupplies[0]}");
         $cooled = strtolower($this->ask("\e[1mStart timer? (yes/no)\e[0m")) === 'yes' ? 'Yes' : 'No';
 
         if ($cooled === 'No') {
-            $this->warn("Don't forget to let the cake cool for {$this->preperationTime['cooling']} before taking it out of the $this->kitchenSupplies[0] before proceeding!");
+            $this->warn("Don't forget to let the cake cool for {$this->preperationTime['cooling']} before taking it out of the {$this->kitchenSupplies[0]} before proceeding!");
             return;
         }
 
         $bar = $this->output->createProgressBar($this->preperationTime['coolingTime']);
         $bar->start();
+        $this->info(' Hit enter to stop the timer...');
 
-        for ($i = 0; $i < $this->preperationTime['coolingTime']; $i++) {
-            $bar->advance();
-            sleep(60);
+        $timerStopped = false;
+        for ($i = 0; $i < $this->preperationTime['coolingTime'] && !$timerStopped; $i++) {
+            // Check for input every second instead of once per minute
+            for ($j = 0; $j < 60 && !$timerStopped; $j++) {
+                // Check for input in a non-blocking way
+                $read = [STDIN];
+                $write = null;
+                $except = null;
+                
+                // Check if there's input available (non-blocking)
+                if (stream_select($read, $write, $except, 0, 0) > 0) {
+                    $input = trim(fgets(STDIN));
+                    if ($input === '') {
+                        $timerStopped = true;
+                        $this->info("\n\e[33mTimer stopped by user.\e[0m\n");
+                        break;
+                    }
+                }
+                
+                sleep(1);
+            }
+            
+            if (!$timerStopped) {
+                $bar->advance();
+            }
         }
 
         $bar->finish();
@@ -230,7 +276,7 @@ class ButterCakeRecipeCommand extends Command
         sleep(1.5);
     }
 
-    public function serve() {
+    public function serve(): void {
         $this->info("\e[1mNext step...\e[0m");
         $this->info("Bring the cake to work and show off your (orange)talent!");
         sleep(5);
